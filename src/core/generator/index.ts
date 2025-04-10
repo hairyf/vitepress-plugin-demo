@@ -97,10 +97,10 @@ export function parse(
   !isUsingTS && (jsAttr = attr)
 
   const lang = type === 'react' ? (path.endsWith('.tsx') ? 'tsx' : 'jsx') : type!
-  let jsCode = ''
-  let tsCode = ''
-  let jsHtml = ''
-  let tsHtml = ''
+  let javascript = ''
+  let typescript = ''
+  let javascriptHtml = ''
+  let typescriptHtml = ''
 
   const metadata: Metadata = {
     absolutePath: path,
@@ -109,49 +109,49 @@ export function parse(
   }
 
   if (lang === 'vue') {
-    tsCode = isUsingTS ? transformSfc(code, { lang: 'ts' }) : ''
-    jsCode = transformSfc(code, { lang: 'js', fix: isUsingTS })
-    tsHtml = isUsingTS ? pre(highlight(tsCode, lang, attr)) : ''
-    jsHtml = pre(highlight!(jsCode, lang, jsAttr))
+    typescript = isUsingTS ? transformSfc(code, { lang: 'ts' }) : ''
+    javascript = transformSfc(code, { lang: 'js', fix: isUsingTS })
+    typescriptHtml = isUsingTS ? pre(highlight(typescript, lang, attr)) : ''
+    javascriptHtml = pre(highlight!(javascript, lang, jsAttr))
   }
 
   if (lang === 'html') {
-    jsCode = code
-    jsHtml = pre(highlight(code, lang, jsAttr))
+    javascript = code
+    javascriptHtml = pre(highlight(code, lang, jsAttr))
   }
 
   if (lang === 'js') {
-    jsCode = code
-    jsHtml = pre(highlight(code, lang, jsAttr))
+    javascript = code
+    javascriptHtml = pre(highlight(code, lang, jsAttr))
     injectImportStatement(env, undefined, path)
   }
 
   if (lang === 'ts') {
-    tsCode = code
-    tsHtml = pre(highlight(code, lang, attr))
-    jsCode = format(tsToJs(tsCode), 'js')
-    jsHtml = pre(highlight(jsCode, lang, jsAttr))
+    typescript = code
+    typescriptHtml = pre(highlight(code, lang, attr))
+    javascript = format(tsToJs(typescript), 'js')
+    javascriptHtml = pre(highlight(javascript, lang, jsAttr))
     const file = metadata.relativePath.replace(/\//g, '_').replace(/\.ts/, '.js')
     const dirpath = normalizePath(`${__dirname}/temp`)
     const filepath = normalizePath(`${dirpath}/${file}`)
     fs.existsSync(dirpath) || fs.mkdirSync(dirpath)
-    fs.writeFileSync(filepath, jsCode)
+    fs.writeFileSync(filepath, javascript)
     injectImportStatement(env, undefined, filepath)
   }
 
   if (lang === 'tsx') {
-    tsCode = code
-    tsHtml = pre(highlight(code, lang, attr))
-    jsCode = format(tsToJs(tsCode, { loader: 'tsx', jsx: 'preserve' }), 'jsx')
-    jsHtml = pre(highlight(jsCode, lang, jsAttr))
+    typescript = code
+    typescriptHtml = pre(highlight(code, lang, attr))
+    javascript = format(tsToJs(typescript, { loader: 'tsx', jsx: 'preserve' }), 'jsx')
+    javascriptHtml = pre(highlight(javascript, lang, jsAttr))
   }
 
   if (lang === 'jsx') {
-    jsCode = code
-    jsHtml = pre(highlight(code, lang, jsAttr))
+    javascript = code
+    javascriptHtml = pre(highlight(code, lang, jsAttr))
   }
 
-  const highlightedHtml = tsHtml || jsHtml
+  const highlightedHtml = typescriptHtml || javascriptHtml
   const descriptionHtml = md.renderInline(desc || '')
 
   function pre(code: string) {
@@ -161,10 +161,10 @@ export function parse(
   }
 
   const props
-    = `tsCode="${encodeURIComponent(tsCode)}"\n`
-      + `jsCode="${encodeURIComponent(jsCode)}"\n`
-      + `tsHtml="${encodeURIComponent(tsHtml)}"\n`
-      + `jsHtml="${encodeURIComponent(jsHtml)}"\n`
+    = `typescript="${encodeURIComponent(typescript)}"\n`
+      + `javascript="${encodeURIComponent(javascript)}"\n`
+      + `typescriptHtml="${encodeURIComponent(typescriptHtml)}"\n`
+      + `javascriptHtml="${encodeURIComponent(javascriptHtml)}"\n`
       + `:metadata='${JSON.stringify(metadata)}'\n`
       + `v-bind='${JSON.stringify(bindProps)}'\n`
 
@@ -174,10 +174,10 @@ export function parse(
     descriptionHtml,
     highlightedHtml,
     isUsingTS,
-    tsCode,
-    jsCode,
-    tsHtml,
-    jsHtml,
+    typescript,
+    javascript,
+    typescriptHtml,
+    javascriptHtml,
     template,
     type,
   }
@@ -188,11 +188,11 @@ export function generateDemoComponent(
   env: MarkdownEnv,
   options: GenerateOptions,
 ) {
-  const { template, props, descriptionHtml, tsHtml, jsHtml } = parse(md, env, options)
+  const { template, props, descriptionHtml, typescriptHtml, javascriptHtml } = parse(md, env, options)
 
   return trim(`
   <demo-container \n${props}>
-    ${generateSfcSlots(tsHtml, jsHtml)}
+    ${generateSfcSlots(typescriptHtml, javascriptHtml)}
     ${template}
     <template #md:description>
       ${descriptionHtml}
@@ -206,11 +206,11 @@ export function generateDemoContainerPrefix(
   env: MarkdownEnv,
   options: GenerateOptions,
 ) {
-  const { template, props, tsHtml, jsHtml } = parse(md, env, options)
+  const { template, props, typescriptHtml, javascriptHtml } = parse(md, env, options)
 
   return trim(`
   <demo-container \n${props}>
-    ${generateSfcSlots(tsHtml, jsHtml)}
+    ${generateSfcSlots(typescriptHtml, javascriptHtml)}
     ${template}
     <template #md:description>
   `)
@@ -223,16 +223,16 @@ export function generateDemoContainerSuffix() {
   `)
 }
 
-export function generateSfcSlots(tsHtml?: string, jsHtml?: string) {
+export function generateSfcSlots(typescriptHtml?: string, javascriptHtml?: string) {
   return trim(`
     <template #md:typescript>
       <div class="language-vue" style="flex: 1;">
-        ${tsHtml}
+        ${typescriptHtml}
       </div>
     </template>
     <template #md:javascript>
       <div class="language-vue" style="flex: 1;">
-        ${jsHtml}
+        ${javascriptHtml}
       </div>
     </template>
   `)

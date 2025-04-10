@@ -1,8 +1,8 @@
 <!-- eslint-disable no-console -->
 <script lang="ts" setup>
 defineProps<{
-  tsCode: string
-  jsCode: string
+  typescript: string
+  javascript: string
   title: string
   metadata: object
   expand?: boolean

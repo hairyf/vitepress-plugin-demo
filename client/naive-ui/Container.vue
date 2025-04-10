@@ -11,9 +11,9 @@ import NaiveContainer from './components/NaiveContainer.vue'
 import { i18n } from './composables'
 
 const props = defineProps<{
-  tsCode: string
-  // if using ts, jsCode will transform the to js
-  jsCode: string
+  typescript: string
+  // if using ts, javascript will transform the to js
+  javascript: string
   metadata: Record<string, any>
   title: string
   expand?: boolean
@@ -45,12 +45,12 @@ const { t } = i18n({
   },
 })
 const instance = getCurrentInstance()
-const tsCode = computed(() => decodeURIComponent(props.tsCode))
-const jsCode = computed(() => decodeURIComponent(props.jsCode))
+const typescript = computed(() => decodeURIComponent(props.typescript))
+const javascript = computed(() => decodeURIComponent(props.javascript))
 
-const isUsingTs = computed(() => !!props.tsCode)
+const isUsingTs = computed(() => !!props.typescript)
 
-const code = computed(() => isUsingTs.value ? tsCode.value : jsCode.value)
+const code = computed(() => isUsingTs.value ? typescript.value : javascript.value)
 
 const showLanguage = ref(isUsingTs.value ? 'ts' : 'js')
 

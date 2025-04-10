@@ -144,7 +144,7 @@ export default {
           opens: ['App.vue']
         },
         resolve(props) {
-          const code = props.tsCode || props.jsCode
+          const code = props.typescript || props.javascript
           return { /* cover global config */ }
         }
       },
@@ -164,21 +164,21 @@ The `demo-container` component will receive relevant information about the demo,
 import { computed } from 'vue'
 
 const props = defineProps<{
-  tsCode: string
-  // if using ts, jsCode will transform the to js
-  jsCode: string
+  typescript: string
+  // if using ts, javascript will transform the to js
+  javascript: string
   title: string
   metadata: object
 }>()
 
-const sfcCode = computed(() => decodeURIComponent(props.tsCode || props.jsCode))
+const code = computed(() => decodeURIComponent(props.typescript || props.javascript))
 </script>
 
 <template>
   <div>
     <div>{{ title }}</div>
     <!-- copy your demo source code -->
-    <div @click="navigator.clipboard.writeText(sfcCode)"> Copy Code </div>
+    <div @click="navigator.clipboard.writeText(code)"> Copy Code </div>
     <!-- The description is rendered in the desc slot -->
     <slot name="md:description" />
     <!-- The demo is rendered in the default slot -->
@@ -213,8 +213,8 @@ The `demo-container` component will receive relevant information about the demo.
 ```html
 <script lang="ts" setup>
 const props = defineProps<{
-  tsCode: string
-  jsCode: string
+  typescript: string
+  javascript: string
   title: string
   // metadata returns information about the demo during build (absolutePath, relativePath, fileName)
   metadata: object
@@ -237,8 +237,8 @@ You can define the parameters for CodeSandbox by using `codesandbox/lib/api/defi
 import { getParameters } from 'codesandbox/lib/api/define'
 
 const props = defineProps<{
-  tsCode: string
-  jsCode: string
+  typescript: string
+  javascript: string
   // ...
 }>()
 
@@ -251,7 +251,7 @@ const parameters = computed(() => {
         content: { dependencies: { vue: 'latest' } },
       },
       'index.html': { content: `<div id="app"></div>` },
-      'App.vue': { content: decodeURIComponent(props.jsCode) },
+      'App.vue': { content: decodeURIComponent(props.javascript) },
       'src/main.js': { content: '...' },
     },
   })
