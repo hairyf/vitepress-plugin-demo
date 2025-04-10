@@ -22,13 +22,13 @@
 
 With this plugin, you can use the `<demo>` tag in Markdown to reference a demo container. For example:
 
-```html
+```vue
 <demo src="../demo.vue" title="Demo block" description="use demo" />
 ```
 
 You can use Markdown syntax in the `desc` field. For example:
 
-```html
+```vue
 <demo src="../demo.vue" title="Demo block" description="use `demo` ..." />
 ```
 
@@ -159,7 +159,7 @@ export default {
 
 The `demo-container` component will receive relevant information about the demo, and you need to implement the rendering of the demo:
 
-```html
+```vue
 <script lang="ts" setup>
 import { computed } from 'vue'
 
@@ -178,7 +178,9 @@ const code = computed(() => decodeURIComponent(props.typescript || props.javascr
   <div>
     <div>{{ title }}</div>
     <!-- copy your demo source code -->
-    <div @click="navigator.clipboard.writeText(code)"> Copy Code </div>
+    <div @click="navigator.clipboard.writeText(code)">
+      Copy Code
+    </div>
     <!-- The description is rendered in the desc slot -->
     <slot name="md:description" />
     <!-- The demo is rendered in the default slot -->
@@ -210,7 +212,7 @@ const props = defineProps<{
 
 The `demo-container` component will receive relevant information about the demo. You can use the `metadata` to access and use this information within the demo:
 
-```html
+```vue
 <script lang="ts" setup>
 const props = defineProps<{
   typescript: string
@@ -232,7 +234,7 @@ function toEditGithubDemoFile() {
 
 You can define the parameters for CodeSandbox by using `codesandbox/lib/api/define` and create a sandbox environment by submitting them to the CodeSandbox API through a `<form>`:
 
-```html
+```vue
 <script lang="ts" setup>
 import { getParameters } from 'codesandbox/lib/api/define'
 
@@ -257,6 +259,7 @@ const parameters = computed(() => {
   })
 })
 </script>
+
 <template>
   <!-- Form to submit the parameters to CodeSandbox -->
   <form action="https://codesandbox.io/api/v1/sandboxes/define" method="POST" target="_blank">
