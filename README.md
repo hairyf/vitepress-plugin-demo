@@ -23,13 +23,13 @@
 With this plugin, you can use the `<demo>` tag in Markdown to reference a demo container. For example:
 
 ```html
-<demo src="../demo.vue" title="Demo block" desc="use demo" />
+<demo src="../demo.vue" title="Demo block" description="use demo" />
 ```
 
 You can use Markdown syntax in the `desc` field. For example:
 
 ```html
-<demo src="../demo.vue" title="Demo block" desc="use `demo` ..." />
+<demo src="../demo.vue" title="Demo block" description="use `demo` ..." />
 ```
 
 However, we recommend using the `container` mode to write the `desc` content with Markdown:
@@ -47,8 +47,8 @@ This looks more aesthetically pleasing and adheres better to Markdown syntax.
 In addition, you can pass the `attrs` parameter to `props`, so you can utilize the [Line Highlighting in Code Blocks](https://vitepress.dev/guide/markdown#line-highlighting-in-code-blocks) feature of VitePress:
 
 ```markdown
-<demo src="../demo.vue" attrs="{1,4,6-8}" />
-<demo src="../demo.vue" attrs="{4}" />
+<demo src="../demo.vue" attributes="{1,4,6-8}" />
+<demo src="../demo.vue" attributes="{4}" />
 ```
 
 ## Twoslash
@@ -56,7 +56,7 @@ In addition, you can pass the `attrs` parameter to `props`, so you can utilize t
 `vitepress-plugin-demo` also supports [vitepress/twoslash](https://shiki.style/packages/vitepress) syntax highlighting. You can use the `twoslash` tag in Markdown to reference a demo container. For example:
 
 ```markdown
-<demo src="../demo.vue" title="Demo block" desc="use demo" twoslash />
+<demo src="../demo.vue" title="Demo block" description="use demo" twoslash />
 ```
 
 ## React
@@ -70,7 +70,7 @@ npm install react react-dom --save-dev
 import your React component:
 
 ```markdown
-<demo type="react" src="../demo.tsx" title="Demo block" desc="use demo" />
+<demo type="react" src="../demo.tsx" title="Demo block" description="use demo" />
 ```
 
 ## Install

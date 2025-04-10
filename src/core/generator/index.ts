@@ -86,7 +86,7 @@ export function parse(
   const attrs = parseMdAttrs(attr)
   const jsAttrs = parseMdAttrs(jsAttr)
   twoslash && attrs.push('twoslash')
-  twoslash && jsAttrs.push('twoslash')
+  // twoslash && jsAttrs.push('twoslash')
 
   attr = attrs.join(',')
   jsAttr = jsAttrs.join(',')
