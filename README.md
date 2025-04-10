@@ -180,7 +180,7 @@ const sfcCode = computed(() => decodeURIComponent(props.tsCode || props.jsCode))
     <!-- copy your demo source code -->
     <div @click="navigator.clipboard.writeText(sfcCode)"> Copy Code </div>
     <!-- The description is rendered in the desc slot -->
-    <slot name="md:desc" />
+    <slot name="md:description" />
     <!-- The demo is rendered in the default slot -->
     <slot />
     <!-- highlighted code for the demo -->

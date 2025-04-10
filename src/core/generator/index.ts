@@ -194,7 +194,7 @@ export function generateDemoComponent(
   <demo-container \n${props}>
     ${generateSfcSlots(tsHtml, jsHtml)}
     ${template}
-    <template #md:desc>
+    <template #md:description>
       ${descriptionHtml}
     </template>
   </demo-container>
@@ -212,7 +212,7 @@ export function generateDemoContainerPrefix(
   <demo-container \n${props}>
     ${generateSfcSlots(tsHtml, jsHtml)}
     ${template}
-    <template #md:desc>
+    <template #md:description>
   `)
 }
 

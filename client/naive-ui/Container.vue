@@ -80,13 +80,13 @@ const editors = codeeditor?.$editors || []
       <CopyCodeButton :code="code" :success-text="t('copySuccess')" :tooltip="t('copyCode')" />
       <ExpandToggleButton :tooltip="!visible ? t('show') : t('hide')" @click="visible = !visible" />
     </template>
-    <n-p v-if="$slots['md:desc']" class="desc">
-      <slot name="md:desc" />
+    <n-p v-if="$slots['md:description']" class="desc">
+      <slot name="md:description" />
     </n-p>
     <slot />
     <template v-if="visible" #footer>
       <n-tabs
-        v-if="isUsingTs" v-model:value="showLanguage" size="small" type="segment" style="padding: 12px 24px 0 24px"
+        v-if="isUsingTs" v-model:value="showLanguage" size="small" type="segment" style="padding: 12px 24px;"
         animated
       >
         <n-tab name="ts">
@@ -114,5 +114,11 @@ const editors = codeeditor?.$editors || []
 
 .demo-card code.n-text {
   white-space: nowrap;
+}
+
+.demo-card .language-vue {
+  margin: 0 !important;
+  border-radius: 0 !important;
+
 }
 </style>

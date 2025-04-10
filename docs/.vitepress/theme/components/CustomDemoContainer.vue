@@ -23,6 +23,6 @@ defineProps<{
       <slot name="md:sfc-ts" />
       <slot name="md:sfc-js" />
     </div>
-    <slot name="md:desc" />
+    <slot name="md:description" />
   </div>
 </template>
