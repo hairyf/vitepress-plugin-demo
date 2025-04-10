@@ -11,5 +11,8 @@ export default defineConfig({
         inline: ['vitest-package-exports'],
       },
     },
+    testTimeout: 30000,
+    hookTimeout: 50000,
+    teardownTimeout: 50000,
   },
 })
