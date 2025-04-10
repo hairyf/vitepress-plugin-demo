@@ -20,8 +20,8 @@ defineProps<{
     <slot />
     <!-- Highlighted code for the demo -->
     <div>
-      <slot name="md:sfc-ts" />
-      <slot name="md:sfc-js" />
+      <slot name="md:typescript" />
+      <slot name="md:javascript" />
     </div>
     <slot name="md:description" />
   </div>

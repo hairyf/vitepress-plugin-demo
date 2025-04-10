@@ -225,12 +225,12 @@ export function generateDemoContainerSuffix() {
 
 export function generateSfcSlots(tsHtml?: string, jsHtml?: string) {
   return trim(`
-    <template #md:sfc-ts>
+    <template #md:typescript>
       <div class="language-vue" style="flex: 1;">
         ${tsHtml}
       </div>
     </template>
-    <template #md:sfc-js>
+    <template #md:javascript>
       <div class="language-vue" style="flex: 1;">
         ${jsHtml}
       </div>

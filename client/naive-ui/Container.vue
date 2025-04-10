@@ -97,8 +97,8 @@ const editors = codeeditor?.$editors || []
         </n-tab>
       </n-tabs>
 
-      <slot v-if="showLanguage === 'ts'" name="md:sfc-ts" />
-      <slot v-else name="md:sfc-js" />
+      <slot v-if="showLanguage === 'ts'" name="md:typescript" />
+      <slot v-else name="md:javascript" />
     </template>
   </NaiveContainer>
 </template>

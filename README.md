@@ -184,9 +184,9 @@ const sfcCode = computed(() => decodeURIComponent(props.tsCode || props.jsCode))
     <!-- The demo is rendered in the default slot -->
     <slot />
     <!-- highlighted code for the demo -->
-    <slot name="md:sfc-ts" />
+    <slot name="md:typescript" />
     <!-- or -->
-    <slot name="md:sfc-js" />
+    <slot name="md:javascript" />
   </div>
 </template>
 ```
