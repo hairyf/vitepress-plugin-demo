@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { createSyncFn as createWorker } from 'synckit'
 
 export interface Format {
@@ -6,7 +7,7 @@ export interface Format {
 }
 
 const syncify = createWorker<Format>(
-  path.join(import.meta.dirname, './eslint.worker.mjs'),
+  path.join(dirname(), './eslint.worker.mjs'),
 )
 
 export const format: Format = (code, lang) => {
@@ -15,5 +16,14 @@ export const format: Format = (code, lang) => {
   }
   catch {
     return code
+  }
+}
+
+function dirname() {
+  try {
+    return path.dirname(fileURLToPath(import.meta.url))
+  }
+  catch {
+    return __dirname || ''
   }
 }
