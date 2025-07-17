@@ -1,7 +1,7 @@
 {
   "name": "vitepress-plugin-demo",
   "type": "module",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "packageManager": "pnpm@10.6.2",
   "description": "markdown plugin for building demos in vitepress.",
   "author": "Hairyf <anthonyfu117@hotmail.com>",
