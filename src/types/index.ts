@@ -3,3 +3,11 @@ export interface Metadata {
   relativePath: string
   fileName: string
 }
+
+export interface FileItem {
+  name: string
+  typescript?: string
+  javascript?: string
+  typescriptHtml?: string
+  javascriptHtml?: string
+}

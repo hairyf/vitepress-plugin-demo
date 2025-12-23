@@ -3,11 +3,20 @@ import type { Codeeditor } from 'codeeditor-kit'
 import type { InstallComponent } from './components/InstallProvider'
 import Container from './Container.vue'
 
+interface FileItem {
+  name: string
+  typescript?: string
+  javascript?: string
+  typescriptHtml?: string
+  javascriptHtml?: string
+}
+
 const props = defineProps<{
   typescript: string
   // if using ts, javascript will transform the to js
   javascript: string
   metadata: Record<string, any>
+  files?: FileItem[]
   title: string
   expand?: boolean
   github?: string

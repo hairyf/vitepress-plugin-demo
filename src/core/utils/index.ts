@@ -9,8 +9,20 @@ function getPropsMappings(attrs: any[]) {
   const map: Record<string, any> = {}
   for (const { name, value, exp, arg } of attrs) {
     if (name === 'bind') {
-      if (!isUndefined(arg?.content))
-        map[arg.content] = JSON.parse(exp.content)
+      if (!isUndefined(arg?.content)) {
+        try {
+          // eslint-disable-next-line no-new-func
+          map[arg.content] = new Function(`return ${exp.content}`)()
+        }
+        catch {
+          try {
+            map[arg.content] = JSON.parse(exp.content)
+          }
+          catch {
+            console.warn(`[vitepress-plugin-demo] failed to parse props '${arg.content}' with value '${exp.content}'`)
+          }
+        }
+      }
       continue
     }
     if (isUndefined(value?.content) || value?.content === '')
@@ -26,6 +38,7 @@ function getPropsMappings(attrs: any[]) {
 export function parseProps(content: string) {
   const element = baseParse(content).children[0] as ElementNode
   const props = getPropsMappings(element.props as AttributeNode[])
+
   const camelCaseProps: Record<string, any> = {}
   for (const key in props) {
     camelCaseProps[camelCase(key)] = props[key]

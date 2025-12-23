@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { Codeeditor } from 'codeeditor-kit'
 import type { InstallComponent } from './components/InstallProvider'
-import { computed, getCurrentInstance, ref } from 'vue'
+import { computed, getCurrentInstance, ref, watch } from 'vue'
 import CopyCodeButton from './components/CopyCodeButton.vue'
 import EditInCodeSandboxButton from './components/EditInCodeSandboxButton.vue'
 import EditInGithubButton from './components/EditInGithubButton.vue'
@@ -10,11 +10,20 @@ import ExpandToggleButton from './components/ExpandToggleButton.vue'
 import NaiveContainer from './components/NaiveContainer.vue'
 import { i18n } from './composables'
 
+interface FileItem {
+  name: string
+  typescript?: string
+  javascript?: string
+  typescriptHtml?: string
+  javascriptHtml?: string
+}
+
 const props = defineProps<{
   typescript: string
   // if using ts, javascript will transform the to js
   javascript: string
   metadata: Record<string, any>
+  files?: FileItem[]
   title: string
   expand?: boolean
   github?: string
@@ -24,6 +33,7 @@ const props = defineProps<{
 
 const visible = ref(props.expand ?? false)
 
+console.log(props.files) // 这里是 undefined
 const { t } = i18n({
   'zh-CN': {
     show: '显示代码',
@@ -48,11 +58,45 @@ const instance = getCurrentInstance()
 const typescript = computed(() => decodeURIComponent(props.typescript))
 const javascript = computed(() => decodeURIComponent(props.javascript))
 
-const isUsingTs = computed(() => !!props.typescript)
+const hasFiles = computed(() => props.files && props.files.length > 0)
+const activeFileName = ref(props.files?.[0]?.name)
 
-const code = computed(() => isUsingTs.value ? typescript.value : javascript.value)
+watch(() => props.files, (newFiles) => {
+  if (newFiles && newFiles.length) {
+    if (!activeFileName.value || !newFiles.find(f => f.name === activeFileName.value))
+      activeFileName.value = newFiles[0].name
+  }
+})
+
+const activeFile = computed(() => {
+  return props.files?.find(f => f.name === activeFileName.value)
+})
+
+const isUsingTs = computed(() => {
+  if (hasFiles.value && activeFile.value)
+    return !!activeFile.value.typescript
+  return !!props.typescript
+})
+
+const code = computed(() => {
+  if (hasFiles.value && activeFile.value)
+    return isUsingTs.value ? activeFile.value.typescript : activeFile.value.javascript
+
+  return isUsingTs.value ? typescript.value : javascript.value
+})
 
 const showLanguage = ref(isUsingTs.value ? 'ts' : 'js')
+
+// If switching files, reset showLanguage if current language is not available?
+// For now, keep it simple. If TS is available, showLanguage defaults to 'ts' logic above is initial value.
+// But we might need to watch activeFile to adjust showLanguage if needed.
+watch(activeFile, () => {
+  if (isUsingTs.value && showLanguage.value === 'js' && !activeFile.value?.javascript) {
+    showLanguage.value = 'ts'
+  }
+  // If we switch to a file that is ONLY JS, isUsingTs will be false.
+  // showLanguage might not matter as toggle is hidden.
+})
 
 const codeeditor = props.codeeditor || instance?.appContext.config.globalProperties.$codeeditor
 const editors = codeeditor?.$editors || []
@@ -77,7 +121,7 @@ const editors = codeeditor?.$editors || []
         :tooltip="t('editInGithub')"
         :github="github || $github"
       />
-      <CopyCodeButton :code="code" :success-text="t('copySuccess')" :tooltip="t('copyCode')" />
+      <CopyCodeButton :code="code || ''" :success-text="t('copySuccess')" :tooltip="t('copyCode')" />
       <ExpandToggleButton :tooltip="!visible ? t('show') : t('hide')" @click="visible = !visible" />
     </template>
     <n-p v-if="$slots['md:description']" class="desc">
@@ -97,8 +141,27 @@ const editors = codeeditor?.$editors || []
         </n-tab>
       </n-tabs>
 
-      <slot v-if="showLanguage === 'ts'" name="md:typescript" />
-      <slot v-else name="md:javascript" />
+      <div v-if="hasFiles" class="files-tabs">
+        <div class="files-tabs__spacer" />
+        <n-tabs
+          v-model:value="activeFileName"
+          type="card"
+          class="pb-0"
+          size="small"
+        >
+          <n-tab v-for="file in files" :key="file.name" :name="file.name">
+            {{ file.name }}
+          </n-tab>
+        </n-tabs>
+      </div>
+      <div v-if="hasFiles && activeFile" class="language-vue code-pane">
+        <div v-if="showLanguage === 'ts' || !activeFile.javascript" v-html="decodeURIComponent(activeFile.typescriptHtml || activeFile.javascriptHtml || '')" />
+        <div v-else v-html="decodeURIComponent(activeFile.javascriptHtml || '')" />
+      </div>
+      <template v-else>
+        <slot v-if="showLanguage === 'ts'" name="md:typescript" />
+        <slot v-else name="md:javascript" />
+      </template>
     </template>
   </NaiveContainer>
 </template>
@@ -120,5 +183,16 @@ const editors = codeeditor?.$editors || []
   margin: 0 !important;
   border-radius: 0 !important;
 
+}
+.files-tabs {
+  padding: 0;
+  display: flex;
+}
+.files-tabs__spacer {
+  border-bottom: 1px solid var(--n-border-color);
+  width: 24px;
+}
+.code-pane {
+  flex: 1;
 }
 </style>

@@ -1,5 +1,5 @@
 import type { MarkdownEnv, MarkdownRenderer } from 'vitepress'
-import type { Metadata } from '../../types'
+import type { FileItem, Metadata } from '../../types'
 import fs from 'node:fs'
 import { relative } from 'node:path'
 import process from 'node:process'
@@ -21,9 +21,103 @@ export interface GenerateOptions {
   jsAttr?: string
   path: string
   code: string
+  files?: string[]
 }
 
 let index = 1
+
+function pre(code: string) {
+  return code
+    .replace(/\{\{/g, '&#123;&#123;')
+    .replace(/\}\}/g, '&#125;&#125;')
+}
+
+function safeStringify(data: any) {
+  return JSON.stringify(data).replace(/'/g, '&#39;')
+}
+
+function getLanguageResult(
+  md: MarkdownRenderer,
+  code: string,
+  path: string,
+  type: string,
+  attr: string,
+  jsAttr: string,
+) {
+  const highlight = md.options.highlight!
+  path = normalizePath(path)
+
+  const attrs = parseMdAttrs(attr)
+  const jsAttrs = parseMdAttrs(jsAttr)
+  // twoslash handling moved here or kept in parse?
+  // parseMdAttrs returns array.
+
+  attr = attrs.join(',')
+  jsAttr = jsAttrs.join(',')
+
+  const isUsingTS = /lang=['"]ts['"]/.test(code)
+    || path.endsWith('.tsx')
+    || path.endsWith('.ts')
+  !isUsingTS && (jsAttr = attr)
+
+  const lang = type === 'react' ? (path.endsWith('.tsx') ? 'tsx' : 'jsx') : type!
+  let javascript = ''
+  let typescript = ''
+  let javascriptHtml = ''
+  let typescriptHtml = ''
+
+  const metadata: Metadata = {
+    absolutePath: path,
+    relativePath: normalizePath(relative(process.cwd(), path)),
+    fileName: path.split('/').pop() || '',
+  }
+
+  if (lang === 'vue') {
+    typescript = isUsingTS ? transformSfc(code, { lang: 'ts' }) : ''
+    javascript = transformSfc(code, { lang: 'js', fix: isUsingTS })
+    typescriptHtml = isUsingTS ? pre(highlight(typescript, lang, attr)) : ''
+    javascriptHtml = pre(highlight!(javascript, lang, jsAttr))
+  }
+
+  if (lang === 'html') {
+    javascript = code
+    javascriptHtml = pre(highlight(code, lang, jsAttr))
+  }
+
+  if (lang === 'js') {
+    javascript = code
+    javascriptHtml = pre(highlight(code, lang, jsAttr))
+  }
+
+  if (lang === 'ts') {
+    typescript = code
+    typescriptHtml = pre(highlight(code, lang, attr))
+    javascript = format(tsToJs(typescript), 'js')
+    javascriptHtml = pre(highlight(javascript, lang, jsAttr))
+  }
+
+  if (lang === 'tsx') {
+    typescript = code
+    typescriptHtml = pre(highlight(code, lang, attr))
+    javascript = format(tsToJs(typescript, { loader: 'tsx', jsx: 'preserve' }), 'jsx')
+    javascriptHtml = pre(highlight(javascript, lang, jsAttr))
+  }
+
+  if (lang === 'jsx') {
+    javascript = code
+    javascriptHtml = pre(highlight(code, lang, jsAttr))
+  }
+
+  return {
+    typescript,
+    javascript,
+    typescriptHtml,
+    javascriptHtml,
+    metadata,
+    isUsingTS,
+    lang,
+  }
+}
 
 export function parse(
   md: MarkdownRenderer,
@@ -36,9 +130,9 @@ export function parse(
     attr,
     jsAttr,
     type,
+    files,
   }: GenerateOptions,
 ) {
-  const highlight = md.options.highlight!
   const name = `DemoComponent${index++}`
   let template = ''
   path = normalizePath(path)
@@ -83,54 +177,23 @@ export function parse(
     template = `<div ref="${`react${name}ref`}" />`
   }
 
+  // Handle twoslash
   const attrs = parseMdAttrs(attr)
-  const jsAttrs = parseMdAttrs(jsAttr)
-  twoslash && attrs.push('twoslash')
-  // twoslash && jsAttrs.push('twoslash')
-
+  if (twoslash)
+    attrs.push('twoslash')
   attr = attrs.join(',')
-  jsAttr = jsAttrs.join(',')
+  // Note: jsAttr is handled inside getLanguageResult but we need to pass the modified attr if twoslash is added
+  // However getLanguageResult calls parseMdAttrs again.
+  // To preserve twoslash, we should pass it in attr string.
 
-  const isUsingTS = /lang=['"]ts['"]/.test(code)
-    || path.endsWith('.tsx')
-    || path.endsWith('.ts')
-  !isUsingTS && (jsAttr = attr)
-
-  const lang = type === 'react' ? (path.endsWith('.tsx') ? 'tsx' : 'jsx') : type!
-  let javascript = ''
-  let typescript = ''
-  let javascriptHtml = ''
-  let typescriptHtml = ''
-
-  const metadata: Metadata = {
-    absolutePath: path,
-    relativePath: normalizePath(relative(process.cwd(), path)),
-    fileName: path.split('/').pop() || '',
-  }
-
-  if (lang === 'vue') {
-    typescript = isUsingTS ? transformSfc(code, { lang: 'ts' }) : ''
-    javascript = transformSfc(code, { lang: 'js', fix: isUsingTS })
-    typescriptHtml = isUsingTS ? pre(highlight(typescript, lang, attr)) : ''
-    javascriptHtml = pre(highlight!(javascript, lang, jsAttr))
-  }
-
-  if (lang === 'html') {
-    javascript = code
-    javascriptHtml = pre(highlight(code, lang, jsAttr))
-  }
+  const result = getLanguageResult(md, code, path, type!, attr || '', jsAttr || '')
+  const { typescript, javascript, typescriptHtml, javascriptHtml, metadata, isUsingTS, lang } = result
 
   if (lang === 'js') {
-    javascript = code
-    javascriptHtml = pre(highlight(code, lang, jsAttr))
     injectImportStatement(env, undefined, path)
   }
 
   if (lang === 'ts') {
-    typescript = code
-    typescriptHtml = pre(highlight(code, lang, attr))
-    javascript = format(tsToJs(typescript), 'js')
-    javascriptHtml = pre(highlight(javascript, lang, jsAttr))
     const file = metadata.relativePath.replace(/\//g, '_').replace(/\.ts/, '.js')
     const dirpath = normalizePath(`${__dirname}/temp`)
     const filepath = normalizePath(`${dirpath}/${file}`)
@@ -139,40 +202,47 @@ export function parse(
     injectImportStatement(env, undefined, filepath)
   }
 
-  if (lang === 'tsx') {
-    typescript = code
-    typescriptHtml = pre(highlight(code, lang, attr))
-    javascript = format(tsToJs(typescript, { loader: 'tsx', jsx: 'preserve' }), 'jsx')
-    javascriptHtml = pre(highlight(javascript, lang, jsAttr))
+  const filesList: FileItem[] = []
+  if (files) {
+    for (const filePath of files) {
+      const fileCode = fs.readFileSync(filePath, 'utf-8')
+      let fileType = 'vue'
+      if (filePath.endsWith('.html'))
+        fileType = 'html'
+      if (filePath.endsWith('.js'))
+        fileType = 'js'
+      if (filePath.endsWith('.ts'))
+        fileType = 'ts'
+      if (filePath.endsWith('.tsx') || filePath.endsWith('.jsx'))
+        fileType = 'react'
+
+      const fileRes = getLanguageResult(md, fileCode, filePath, fileType, '', '')
+      filesList.push({
+        name: fileRes.metadata.fileName,
+        typescript: fileRes.typescript,
+        javascript: fileRes.javascript,
+        typescriptHtml: fileRes.typescriptHtml,
+        javascriptHtml: fileRes.javascriptHtml,
+      })
+    }
   }
 
-  if (lang === 'jsx') {
-    javascript = code
-    javascriptHtml = pre(highlight(code, lang, jsAttr))
-  }
-
-  const highlightedHtml = typescriptHtml || javascriptHtml
   const descriptionHtml = md.renderInline(desc || '')
-
-  function pre(code: string) {
-    return code
-      .replace(/\{\{/g, '&#123;&#123;')
-      .replace(/\}\}/g, '&#125;&#125;')
-  }
 
   const props
     = `typescript="${encodeURIComponent(typescript)}"\n`
       + `javascript="${encodeURIComponent(javascript)}"\n`
       + `typescriptHtml="${encodeURIComponent(typescriptHtml)}"\n`
       + `javascriptHtml="${encodeURIComponent(javascriptHtml)}"\n`
-      + `:metadata='${JSON.stringify(metadata)}'\n`
-      + `v-bind='${JSON.stringify(bindProps)}'\n`
+      + `:metadata='${safeStringify(metadata)}'\n`
+      + `:files='${safeStringify(filesList)}'\n`
+      + `v-bind='${safeStringify(bindProps)}'\n`
 
   return {
     name,
     props,
     descriptionHtml,
-    highlightedHtml,
+    highlightedHtml: typescriptHtml || javascriptHtml,
     isUsingTS,
     typescript,
     javascript,

@@ -16,12 +16,15 @@ export function markdownDemoTagBlock(md: MarkdownRenderer) {
       const { path } = env as MarkdownEnv
       const props = parseProps(content)
 
-      if (!props.src) {
+      if (!props.src && (!props.files || !props.files.length)) {
         console.error(`rendering ${path}: src prop is required`)
         return defaultRender!(tokens, idx, options, env, self)
       }
 
-      const { src, description = '', attributes, attributesInJs, type = 'vue', ...otherProps } = props
+      if (!props.src && props.files && props.files.length > 0)
+        props.src = props.files[0]
+
+      const { src, description = '', attributes, attributesInJs, type = 'vue', files, ...otherProps } = props
       const markdownPath = dirname(path)
       const srcPath = resolve(markdownPath, src).replace(/\\/g, '/')
 
@@ -30,11 +33,21 @@ export function markdownDemoTagBlock(md: MarkdownRenderer) {
         return defaultRender!(tokens, idx, options, env, self)
       }
 
+      const resolvedFiles: string[] = []
+      if (files && Array.isArray(files)) {
+        files.forEach((f: string) => {
+          const fp = resolve(markdownPath, f).replace(/\\/g, '/')
+          if (fs.existsSync(fp))
+            resolvedFiles.push(fp)
+        })
+      }
+
       const demoScripts = generator.generateDemoComponent(md, env, {
         code: fs.readFileSync(srcPath, 'utf-8'),
-        path: resolve(markdownPath, props.src),
+        path: resolve(markdownPath, src),
         props: otherProps,
         jsAttr: attributesInJs,
+        files: resolvedFiles,
         attr: attributes,
         desc: description,
         type,

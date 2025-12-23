@@ -18,10 +18,13 @@ export function markdownDemoContainer(md: MarkdownRenderer) {
         const content = `<demo ${tokens[idx].info.trim().match(demoRE)?.[1]} />`
         const props = parseProps(content)
 
-        if (!props.src)
+        if (!props.src && (!props.files || !props.files.length))
           throw new Error('src prop is required')
 
-        const { src, desc, attrs, attrsInJs, type = 'vue', ...otherProps } = props
+        if (!props.src && props.files && props.files.length > 0)
+          props.src = props.files[0]
+
+        const { src, desc, attrs, attrsInJs, type = 'vue', files, ...otherProps } = props
 
         const markdownPath = dirname(env.path)
         const srcPath = resolve(markdownPath, src).replace(/\\/g, '/')
@@ -29,14 +32,24 @@ export function markdownDemoContainer(md: MarkdownRenderer) {
         if (!fs.existsSync(srcPath))
           throw new Error(`rendering ${env.path}: ${srcPath} does not exist`)
 
+        const resolvedFiles: string[] = []
+        if (files && Array.isArray(files)) {
+          files.forEach((f: string) => {
+            const fp = resolve(markdownPath, f).replace(/\\/g, '/')
+            if (fs.existsSync(fp))
+              resolvedFiles.push(fp)
+          })
+        }
+
         return generator.generateDemoContainerPrefix(md, env, {
           code: fs.readFileSync(srcPath, 'utf-8'),
-          path: resolve(markdownPath, props.src),
+          path: resolve(markdownPath, src),
           props: otherProps,
           attr: attrs,
           jsAttr: attrsInJs,
           desc,
           type,
+          files: resolvedFiles,
         })
       }
       else {

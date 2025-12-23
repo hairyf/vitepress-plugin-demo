@@ -167,6 +167,8 @@ const props = defineProps<{
   typescript: string
   // if using ts, javascript will transform the to js
   javascript: string
+  // TODO: Support custom files
+  files?: Record<string, string>
   title: string
   metadata: object
 }>()

@@ -22,3 +22,10 @@ hero:
   twoslash
   expand
 />
+
+<demo
+  title="多文件示例"
+  description="展示多个文件的示例。"
+  :files="['../index.vue', '../index.ts']"
+  expand
+/>

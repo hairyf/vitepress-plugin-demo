@@ -22,4 +22,11 @@ describe('props', () => {
       expand: true,
     })
   })
+
+  it('parse-array-single-quote', () => {
+    const props = parseProps(`<demo :files="['./index.vue', './index.ts']" />`)
+    expect(props).toEqual({
+      files: ['./index.vue', './index.ts'],
+    })
+  })
 })
