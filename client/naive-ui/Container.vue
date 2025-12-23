@@ -33,7 +33,6 @@ const props = defineProps<{
 
 const visible = ref(props.expand ?? false)
 
-console.log(props.files) // 这里是 undefined
 const { t } = i18n({
   'zh-CN': {
     show: '显示代码',

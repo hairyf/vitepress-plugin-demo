@@ -1,9 +1,9 @@
 import type { MarkdownEnv } from 'vitepress'
+import fs from 'node:fs'
 
 const scriptLangTsRE = /<\s*script[^>]*\blang=['"]ts['"][^>]*/
 const scriptRE = /<\/script>/
 const scriptSetupRE = /<\s*script[^>]*\bsetup\b[^>]*/
-const scriptClientRE = /<\s*script[^>]*\bclient\b[^>]*/
 
 export function injectImportStatement(
   env: MarkdownEnv,
@@ -30,26 +30,42 @@ export function injectImportStatement(
     return (
       scriptRE.test(tag.content)
       && scriptSetupRE.test(tag.content)
-      && !scriptClientRE.test(tag.content)
     )
   })
-  const isUsingSetup = setupScriptIndex > -1
+  const markdownHasSetup = (() => {
+    try {
+      const md = fs.readFileSync(env.path!, 'utf-8')
+      return scriptSetupRE.test(md)
+    }
+    catch {
+      return false
+    }
+  })()
+  const isUsingSetup = setupScriptIndex > -1 || markdownHasSetup
 
-  if (isUsingSetup) {
+  if (setupScriptIndex > -1) {
     const tagSrc = tags[setupScriptIndex]
-    const content = tagSrc.content.replace(
-      scriptRE,
-      `${registerStatement}\n</script>`,
-    )
-    tags[setupScriptIndex].content = content
+    if (scriptRE.test(tagSrc.content)) {
+      const content = tagSrc.content.replace(
+        scriptRE,
+        `${registerStatement}\n</script>`,
+      )
+      tags[setupScriptIndex].content = content
+    }
+    else {
+      tags[setupScriptIndex].content = `${tagSrc.content}\n${registerStatement}\n`
+    }
   }
-  else {
+  else if (!isUsingSetup) {
     tags.unshift({
       content: `\n
       <script ${isUsingTS ? 'lang="ts"' : ''} setup>
         ${registerStatement}
       </script>`,
     } as any)
+  }
+  else if (tags.length > 0) {
+    tags[0].content = `${tags[0].content}\n${registerStatement}\n`
   }
 }
 
@@ -70,26 +86,42 @@ export function injectScriptStatement(
     return (
       scriptRE.test(tag.content)
       && scriptSetupRE.test(tag.content)
-      && !scriptClientRE.test(tag.content)
     )
   })
-  const isUsingSetup = setupScriptIndex > -1
+  const markdownHasSetup = (() => {
+    try {
+      const md = fs.readFileSync(env.path!, 'utf-8')
+      return scriptSetupRE.test(md)
+    }
+    catch {
+      return false
+    }
+  })()
+  const isUsingSetup = setupScriptIndex > -1 || markdownHasSetup
 
-  if (isUsingSetup) {
+  if (setupScriptIndex > -1) {
     const tagSrc = tags[setupScriptIndex]
-    const content = tagSrc.content.replace(
-      scriptRE,
-      `${code}\n</script>`,
-    )
-    tags[setupScriptIndex].content = content
+    if (scriptRE.test(tagSrc.content)) {
+      const content = tagSrc.content.replace(
+        scriptRE,
+        `${code}\n</script>`,
+      )
+      tags[setupScriptIndex].content = content
+    }
+    else {
+      tags[setupScriptIndex].content = `${tagSrc.content}\n${code}\n`
+    }
   }
-  else {
+  else if (!isUsingSetup) {
     tags.unshift({
       content: `\n
     <script ${isUsingTS ? 'lang="ts"' : ''} setup>
       ${code}
     </script>`,
     } as any)
+  }
+  else if (tags.length > 0) {
+    tags[0].content = `${tags[0].content}\n${code}\n`
   }
 }
 
