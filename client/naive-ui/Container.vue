@@ -129,7 +129,7 @@ const editors = codeeditor?.$editors || []
     <slot />
     <template v-if="visible" #footer>
       <n-tabs
-        v-if="isUsingTs" v-model:value="showLanguage" size="small" type="segment" style="padding: 12px 24px;"
+        v-if="isUsingTs" v-model:value="showLanguage" size="small" type="segment" style="margin: 12px 24px;"
         animated
       >
         <n-tab name="ts">
@@ -140,7 +140,7 @@ const editors = codeeditor?.$editors || []
         </n-tab>
       </n-tabs>
 
-      <div v-if="hasFiles" class="files-tabs">
+      <div v-if="hasFiles" class="files-tabs" style="margin-top: 12px;">
         <div class="files-tabs__spacer" />
         <n-tabs
           v-model:value="activeFileName"
